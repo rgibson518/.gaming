@@ -5,8 +5,10 @@
 
 ---
 
+This guide provides the steps to configure a high-performance Linux gaming environment. The process is streamlined using a setup script.
+
 ## 1. BIOS Configuration (The Foundation)
-**⚠️ Critical:** Apply these settings before installing OS or booting.
+**⚠️ Critical:** Apply these settings before installing the OS or booting for the first time.
 *Access BIOS with `Del` or `F2`.*
 
 ### **CPU (Ryzen 7 9800X3D)**
@@ -29,120 +31,69 @@
 
 ---
 
-## 2. Software Installation
-Install the necessary gaming, monitoring, and tuning utilities.
+## 2. Automated Setup Script
 
-```bash
-# Update System
-sudo pacman -Syu
+After completing the BIOS configuration and installing your OS, use the provided Python script to automate the software installation and system configuration.
 
-# Install Core Gaming & Monitoring Utilities
-# scx-scheds: Scheduler extensions
-# gamescope: Micro-compositor for frame pacing
-# lact: GPU tuning/overclocking for Linux
-# btop: System monitoring
-# dmidecode: Hardware verification
-sudo pacman -S scx-scheds gamescope mangoapp btop dmidecode lact
+### How to Use the Script
 
-## 3. System Services Configuration
-### A. CPU Scheduler (SCX_LAVD)
+1.  **Open a terminal** in this directory.
+2.  **Make the script executable** (if you haven't already):
+    ```bash
+    chmod +x setup.py
+    ```
+3.  **Run the script with `sudo`:**
+    ```bash
+    sudo ./setup.py
+    ```
+4.  **Follow the on-screen menu:**
 
-We bypass the default scx_loader to force the lavd (Latency-critical) scheduler directly.
+    *   **1. Setup:** Choose this option first. It will:
+        *   Update your system packages.
+        *   Install necessary gaming and monitoring utilities (`scx-scheds`, `gamescope`, `mangoapp`, `btop`, `dmidecode`, `lact`).
+        *   Create and enable systemd services for `scx_lavd` (CPU scheduler) and `lactd` (GPU tuning).
+    *   **2. Verify:** After running the setup and rebooting, choose this option to automatically check that everything is configured correctly. It will verify:
+        *   The `scx_lavd` scheduler is active.
+        *   RAM speed and sync mode.
+        *   Resizable BAR is enabled and correctly sized.
+        *   GPU power limits are set.
+    *   **3. Monitor:** Launches `btop` for real-time system monitoring.
+    *   **4. Edit MangoHud Config:** Opens the MangoHud configuration file (`~/.config/MangoHud/MangoHud.conf`) in `nano` for easy editing.
+    *   **5. Quit:** Exits the script.
 
-    Create the Service File:
-    Bash
+---
 
-    sudo nano /etc/systemd/system/scx_lavd.service
+## 3. Manual GPU Tuning (LACT)
 
-    Paste Content:
-    Ini, TOML
+The setup script enables the `lactd` daemon, but you must configure the GPU settings manually via the LACT GUI.
 
-    [Unit]
-    Description=SCX LAVD Scheduler
-    After=network.target
+1.  **Open LACT.**
+2.  **Configure Settings:**
+    *   **Power Cap:** Set to Max (e.g., 600W).
+    *   **Performance Level:** Force P0 (Highest).
+    *   **Clocks:**
+        *   **GPU Core Offset:** +300 MHz
+        *   **VRAM Offset:** +2000 MHz (Monitor for artifacts; drop to +1500 if unstable).
+3.  **Apply and Save:** Ensure **"Apply on Startup"** is checked.
 
-    [Service]
-    Type=simple
-    ExecStart=/usr/bin/scx_lavd
-    Restart=on-failure
-
-    [Install]
-    WantedBy=multi-user.target
-
-    Enable the Service:
-    Bash
-
-    sudo systemctl daemon-reload
-    sudo systemctl enable --now scx_lavd
-
-### B. GPU Tuning (LACT)
-
-We use lact to handle Power Limits and Overclocking (replacing manual nvidia-smi scripts).
-
-    Enable the Daemon:
-    Bash
-
-    sudo systemctl enable --now lactd
-
-    Configure Settings (GUI):
-
-        Open LACT.
-
-        Power Cap: Set to Max (600W).
-
-        Performance Level: Force P0 (Highest).
-
-        Clocks:
-
-            GPU Core Offset: +300 MHz
-
-            VRAM Offset: +2000 MHz (Monitor for artifacts; drop to +1500 if unstable).
-
-        Apply: Ensure "Apply on Startup" is checked.
+---
 
 ## 4. Steam Launch Options
 
 Use these flags for Cyberpunk 2077 and other heavy titles to enforce the compositor and power profiles.
 
-Standard Command:
-Bash
+*   **Standard Command:**
+    ```bash
+    gamescope --mangoapp -- game-performance %command%
+    ```
+    *   `gamescope`: Handles windowing and frame pacing.
+    *   `--mangoapp`: Injects the performance overlay.
+    *   `game-performance`: CachyOS optimized "GameMode" (governor tweaks).
 
-gamescope --mangoapp -- game-performance %command%
+*   **If using DLSS Frame Gen (DLSS 3.5):**
+    ```bash
+    PROTON_ENABLE_NVAPI=1 gamescope --mangoapp -- game-performance %command%
+    ```
 
-    gamescope: Handles windowing and frame pacing.
-
-    --mangoapp: Injects the performance overlay.
-
-    game-performance: CachyOS optimized "GameMode" (governor tweaks).
-
-If using DLSS Frame Gen (DLSS 3.5):
-Bash
-
-PROTON_ENABLE_NVAPI=1 gamescope --mangoapp -- game-performance %command%
-
-## 5. Verification Checklist
-
-Run these commands after a reboot to confirm the stack is active.
-
-    Verify Scheduler (Must see scx_lavd):
-    Bash
-
-    ps aux | grep scx_lavd
-
-    Verify RAM Speed & 1:1 Sync:
-    Bash
-
-    # Should show "Configured Memory Speed: 6200 MT/s"
-    sudo dmidecode -t memory | grep "Configured"
-
-    Verify Resizable BAR:
-    Bash
-
-    # Should show Total ~32GB (not 256MB)
-    nvidia-smi -q -d MEMORY | grep -A 3 "BAR1"
-
-    Verify GPU Limits:
-    Bash
-
-    # Should show Power Limit: 600.00 W
-    nvidia-smi -q -d POWER
+---
+Your system should now be fully optimized for a high-performance gaming experience. Enjoy!

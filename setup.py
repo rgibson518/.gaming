@@ -40,7 +40,7 @@ def run_command(command, description, check_output=False, expected_output_patter
         return False # Command failed
 
 def create_service_file():
-    """Creates the scx_lavd systemd service file."""
+    """Creates the scx_lavd systemd service file if it doesn't exist or is different."""
     print("--- Creating scx_lavd.service file ---")
     service_content = """[Unit]
 Description=SCX LAVD Scheduler
@@ -54,7 +54,15 @@ Restart=on-failure
 [Install]
 WantedBy=multi-user.target
 """
-    command = f"echo '{service_content}' | sudo tee /etc/systemd/system/scx_lavd.service"
+    service_path = "/etc/systemd/system/scx_lavd.service"
+    if os.path.exists(service_path):
+        with open(service_path, "r") as f:
+            existing_content = f.read()
+        if existing_content == service_content:
+            print("scx_lavd.service file already exists and is up to date.")
+            return
+
+    command = f"echo '{service_content}' | sudo tee {service_path}"
     run_command(command, "Creating scx_lavd.service file")
 
 def setup():
@@ -125,9 +133,13 @@ def monitor():
     os.system("btop")
 
 def edit_mangohud():
-    """Opens the MangoHud config file in nano."""
+    """Opens the MangoHud config file in nano for the original user."""
     print("--- Opening MangoHud config in nano ---")
-    config_path = os.path.expanduser("~/.config/MangoHud/MangoHud.conf")
+    
+    # Get the original user's home directory, even if running with sudo
+    original_user_home = os.path.expanduser("~" + os.getenv("SUDO_USER", ""))
+    config_path = os.path.join(original_user_home, ".config", "MangoHud", "MangoHud.conf")
+
     os.system(f"nano {config_path}")
 
 def main():
