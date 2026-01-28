@@ -102,14 +102,16 @@ def verify():
     ram_desc = "Verify RAM Speed & 1:1 Sync (Should show Configured Memory Speed: 6200 MT/s)"
     results.append(run_command(ram_cmd, ram_desc, check_output=True, expected_output_pattern='Configured Memory Speed: 6200 MT/s'))
 
-        # Verify Resizable BAR
-            bar_cmd = 'nvidia-smi -q -d MEMORY | grep -A 3 "BAR1"'
-            bar_desc = "Verify Resizable BAR (Should show Total ~32GB, not 256MB)"
-            results.append(run_command(bar_cmd, bar_desc, check_output=True, expected_output_pattern=r'Total\s*:\s*32768 MiB'))        
-        # Verify GPU Limits
-        gpu_cmd = 'nvidia-smi -q -d POWER'
-        gpu_desc = "Verify GPU Limits (Should show Power Limit: 600.00 W)"
-        results.append(run_command(gpu_cmd, gpu_desc, check_output=True, expected_output_pattern=r'Power Limit\s*:\s*600\.00 W'))
+    # Verify Resizable BAR
+    bar_cmd = 'nvidia-smi -q -d MEMORY | grep -A 3 "BAR1"'
+    bar_desc = "Verify Resizable BAR (Should show Total ~32GB, not 256MB)"
+    results.append(run_command(bar_cmd, bar_desc, check_output=True, expected_output_pattern=r'Total\s*:\s*32768 MiB'))
+    
+    # Verify GPU Limits
+    gpu_cmd = 'nvidia-smi -q -d POWER'
+    gpu_desc = "Verify GPU Limits (Should show Power Limit: 600.00 W)"
+    results.append(run_command(gpu_cmd, gpu_desc, check_output=True, expected_output_pattern=r'Power Limit\s*:\s*600\.00 W'))
+
     if all(results):
         print(f"\n{COLOR_GREEN}All verification checks passed!{COLOR_RESET}")
     else:
