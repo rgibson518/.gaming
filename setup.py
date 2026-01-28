@@ -103,10 +103,9 @@ def verify():
     results.append(run_command(ram_cmd, ram_desc, check_output=True, expected_output_pattern='Configured Memory Speed: 6200 MT/s'))
 
         # Verify Resizable BAR
-        bar_cmd = 'nvidia-smi -q -d MEMORY | grep -A 3 "BAR1"'
-        bar_desc = "Verify Resizable BAR (Should show Total ~32GB, not 256MB)"
-        results.append(run_command(bar_cmd, bar_desc, check_output=True, expected_output_pattern=r'BAR1 Memory\s*:\s*\d{2,} MiB'))
-        
+            bar_cmd = 'nvidia-smi -q -d MEMORY | grep -A 3 "BAR1"'
+            bar_desc = "Verify Resizable BAR (Should show Total ~32GB, not 256MB)"
+            results.append(run_command(bar_cmd, bar_desc, check_output=True, expected_output_pattern=r'Total\s*:\s*32768 MiB'))        
         # Verify GPU Limits
         gpu_cmd = 'nvidia-smi -q -d POWER'
         gpu_desc = "Verify GPU Limits (Should show Power Limit: 600.00 W)"
